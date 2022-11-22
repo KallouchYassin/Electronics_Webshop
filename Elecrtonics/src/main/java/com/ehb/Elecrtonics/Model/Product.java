@@ -1,5 +1,7 @@
 package com.ehb.Elecrtonics.Model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 
@@ -14,6 +16,7 @@ public class Product {
     private @NotBlank Double price;
     private @NotBlank String description;
 @ManyToOne
+@JsonIgnore
 @JoinColumn(name="category_id")
 Category category;
 

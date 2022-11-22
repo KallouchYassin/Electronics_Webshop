@@ -1,60 +1,85 @@
 package com.ehb.Elecrtonics.Service;
 
-import com.ehb.Elecrtonics.Model.Role;
+import com.ehb.Elecrtonics.Model.AuthenticationToken;
 import com.ehb.Elecrtonics.Model.User;
-import com.ehb.Elecrtonics.dao.RoleDao;
 import com.ehb.Elecrtonics.dao.UserDao;
+import com.ehb.Elecrtonics.dto.ResponseDto;
+import com.ehb.Elecrtonics.dto.SigninDto;
+import com.ehb.Elecrtonics.dto.SigninResponseDto;
+import com.ehb.Elecrtonics.dto.SignupDto;
+import com.ehb.Elecrtonics.exceptions.AuthenticationErrorException;
+import com.ehb.Elecrtonics.exceptions.newException;
+import org.apache.tomcat.websocket.AuthenticationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.Set;
+import javax.transaction.Transactional;
+import javax.xml.bind.DatatypeConverter;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Objects;
 
 @Service
 public class UserService {
-
+@Autowired
+AuthenticationService authenticationService;
     @Autowired
 private UserDao userDao;
-    @Autowired
-    private RoleDao roleDao;
+@Transactional
+    public ResponseDto signUp(SignupDto signupDto) {
 
-    public User registerUser(User user)
-    {
-return userDao.save(user);
+        if(Objects.nonNull(userDao.findByEmail(signupDto.getEmail())))
+        {
+    throw new newException("user already exist");
+        }
+        String encryptPassword= signupDto.getPassword();
+        try{
+            encryptPassword=hashPassword(signupDto.getPassword());
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        User user=new User(signupDto.getFirstName(), signupDto.getLastName(), signupDto.getEmail(),encryptPassword);
+userDao.save(user);
+       final AuthenticationToken authenticationToken=new AuthenticationToken(user);
+authenticationService.saveToken(authenticationToken);
+        ResponseDto responseDto=new ResponseDto("success","dummy response");
+    return responseDto;
     }
 
-    public void initRolesAndUser()
-    {
-        Role adminRole=new Role();
-        adminRole.setRole_name("Admin");
-        adminRole.setRole_description("Admin role ");
-   roleDao.save(adminRole);
+    private String hashPassword(String password) throws NoSuchAlgorithmException {
+        MessageDigest md= MessageDigest.getInstance("MD5");
+        md.update(password.getBytes());
+        byte[] digest=md.digest();
+        String hash= DatatypeConverter.printHexBinary(digest).toUpperCase();
+        return hash;
+    }
 
-        Role userRole=new Role();
-        userRole.setRole_name("User");
-        userRole.setRole_description("Default role ");
-        roleDao.save(userRole);
+    public SigninResponseDto signIn(SigninDto signinDto)  {
+User user=userDao.findByEmail(signinDto.getEmail());
+if (Objects.isNull(user))
+{
+throw new AuthenticationErrorException("user is not valid");
 
-        User adminUser =new User();
-        adminUser.setUserFirstname("admin");
-        adminUser.setUserFirstname("admin");
-        adminUser.setUserPassword("admin1234");
-        adminUser.setUsername("admin");
+}
+        try {
+           if(!user.getPassword().equals(hashPassword(signinDto.getPassword())))
+           {
+               throw new AuthenticationErrorException("wrong password");
 
-        Set<Role> adminRoles= new HashSet<>();
+           }
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+AuthenticationToken token =authenticationService.getToken(user);
+        if(Objects.isNull(token))
+        {
+            throw new newException("token is not present");
 
-        adminRoles.add(adminRole);
-        adminUser.setRole(adminRoles);
-        userDao.save(adminUser);
+        }
+        return new SigninResponseDto("succes",token.getToken());
+    }
 
-        User firstUser =new User();
-        firstUser.setUserFirstname("firstUser");
-        firstUser.setUserFirstname("firstUser");
-        firstUser.setUserPassword("firstUser1234");
-        firstUser.setUsername("firstUser");
-        Set<Role> userRoles= new HashSet<>();
-        userRoles.add(userRole);
-firstUser.setRole(userRoles);
-        userDao.save(firstUser);
+    public Iterable<User> listUser() {
+        return userDao.findAll();
     }
 }

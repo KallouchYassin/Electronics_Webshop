@@ -4,6 +4,7 @@ import com.ehb.Elecrtonics.Model.Category;
 import com.ehb.Elecrtonics.Model.Product;
 import com.ehb.Elecrtonics.dao.ProductDao;
 import com.ehb.Elecrtonics.dto.ProductDto;
+import com.ehb.Elecrtonics.exceptions.ProductErrorException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -60,5 +61,14 @@ public class ProductService {
         product.setName(productDto.getName());
         product.setPrice(productDto.getPrice());
         productDao.save(product);
+    }
+
+    public Product findById(Integer productId) {
+   Optional<Product> optionalProduct=productDao.findById(productId);
+   if(optionalProduct.isEmpty())
+   {
+       throw new ProductErrorException("product doesn't exist"+productId);
+   }
+return optionalProduct.get();
     }
 }

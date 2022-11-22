@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Optional;
 
 @RestController
+@CrossOrigin
 @RequestMapping("/product")
 public class ProductController {
     @Autowired
@@ -19,7 +20,7 @@ public class ProductController {
 @Autowired
 CategoryDao categoryDao;
 
-    @PostMapping("/addProduct")
+    @PostMapping("/add")
     public String addProduct(@RequestBody ProductDto productDto)
     {
         Optional<Category> optionalCategory=categoryDao.findById(productDto.getCategoryId());
@@ -30,7 +31,7 @@ CategoryDao categoryDao;
          productService.addProduct(productDto,optionalCategory.get());
         return "Succeed";
     }
-    @GetMapping("/listProduct")
+    @GetMapping("/list")
     public Iterable<ProductDto> listProduct()
     {
         return productService.getProducts();

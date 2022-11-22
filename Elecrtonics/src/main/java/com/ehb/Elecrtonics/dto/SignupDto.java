@@ -1,36 +1,11 @@
-package com.ehb.Elecrtonics.Model;
+package com.ehb.Elecrtonics.dto;
 
-import javax.persistence.*;
-import java.util.Set;
+public class SignupDto {
 
-@Entity
-@Table(name = "users")
-public class User {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-private Integer id;
-    @Column(name = "first_name")
     private String firstName;
-    @Column(name = "last_name")
     private String lastName;
-    @Column(name = "email")
     private String email;
-    @Column(name = "password")
     private String password;
-
-
-
-    public User(String firstName, String lastName, String email, String password) {
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.email = email;
-        this.password = password;
-    }
-
-    public User() {
-
-    }
 
     public String getFirstName() {
         return firstName;
