@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
 @RestController
-@CrossOrigin
+@CrossOrigin("*")
 @RequestMapping("/category")
 public class CategoryController {
 
